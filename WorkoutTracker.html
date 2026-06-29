@@ -1,0 +1,122 @@
+
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workout Tracker</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial;background:#0f1115;color:#fff}
+header{padding:16px;background:#171a21;position:sticky;top:0}
+h1{margin:0;font-size:24px}
+.tabs{display:flex;overflow:auto;padding:8px;background:#111}
+.tabs button{margin:4px;padding:10px 14px;border:0;border-radius:8px;background:#2a2f3a;color:#fff}
+.card{background:#1b2029;margin:12px;border-radius:12px;padding:14px}
+.ex{border-top:1px solid #333;padding:12px 0}
+input,textarea{width:100%;margin:4px 0;padding:8px;border-radius:8px;border:1px solid #444;background:#101318;color:#fff;box-sizing:border-box}
+.small{color:#aaa;font-size:13px}
+details{margin-top:8px}
+.done{color:#67e480;font-weight:bold}
+</style>
+</head>
+<body>
+<header><h1>💪 Workout Tracker</h1><div id="progress"></div></header>
+<div class="tabs" id="tabs"></div>
+<div id="content"></div>
+<script>
+const plan={
+"Day 1 Push":[
+["🏋️ Incline DB Press","4x8-10","Upper Chest","Smith Incline / Machine Incline"],
+["🏋️ Machine Chest Press","3x10-12","Chest","Bench Press"],
+["🪽 Pec Deck","3x15","Chest","Cable Fly"],
+["💪 Cable Lateral Raise","5x15","Side Delts","DB Lateral Raise"],
+["🦾 Rope Pushdown","3x12","Triceps","Close Grip Bench"],
+["🦾 Overhead Extension","3x12","Triceps","Skull Crushers"]],
+"Day 2 Pull":[
+["⬇️ Pull Ups","3 sets","Lats","Lat Pulldown"],
+["⬇️ Lat Pulldown","4x10","Lats","Assisted Pullups"],
+["🚣 Chest Supported Row","4x10","Back","Cable Row"],
+["🏹 Straight Arm Pulldown","3x15","Lats","DB Pullover"],
+["💪 Preacher Curl","3x12","Biceps","EZ Curl"],
+["💪 Hammer Curl","3x12","Biceps","Incline Curl"]],
+"Day 3 Legs":[
+["🦵 Squat","4x8","Quads","Hack Squat"],
+["🦵 Romanian Deadlift","3x10","Hamstrings","Leg Curl"],
+["🦵 Leg Press","3x12","Quads","Bulgarian Split Squat"],
+["🦵 Leg Extension","3x15","Quads","Sissy Squat"],
+["🦵 Leg Curl","3x15","Hamstrings","Nordic Curl"],
+["🦵 Calf Raise","5x15","Calves","Seated Calf"]],
+"Day 4 Push":[
+["🏋️ Shoulder Press","4x8","Shoulders","Machine Press"],
+["💪 Cable Lateral Raise","5x15","Side Delts","Machine Raise"],
+["🪽 Rear Delt Fly","4x15","Rear Delts","Face Pull"],
+["🏋️ Incline Smith Press","3x10","Upper Chest","Incline DB"],
+["🪽 Cable Fly","3x15","Chest","Pec Deck"]],
+"Day 5 Pull":[
+["🚣 Barbell Row","4x8","Back","Chest Supported Row"],
+["🚣 Cable Row","3x10","Back","Machine Row"],
+["⬇️ Close Grip Pulldown","3x12","Lats","Neutral Pullup"],
+["💪 EZ Curl","3x10","Biceps","Barbell Curl"],
+["💪 Hammer Curl","3x12","Biceps","Rope Hammer"],
+["🦾 Skull Crushers","3x10","Triceps","Pushdown"]],
+"Day 6 Legs/Core":[
+["🦵 Hack Squat","4x10","Quads","Front Squat"],
+["🦵 Bulgarian Split Squat","3x10","Legs","Walking Lunges"],
+["🦵 Seated Leg Curl","3x12","Hamstrings","RDL"],
+["🦵 Seated Calf Raise","4x15","Calves","Standing Calf"],
+["🔥 Ab Wheel","3x10","Core","Plank"],
+["🔥 Cable Crunch","3x15","Core","Crunches"]]
+};
+let db=JSON.parse(localStorage.getItem("gymDB")||"{}");
+const tabs=document.getElementById("tabs"),content=document.getElementById("content");
+function save(){localStorage.setItem("gymDB",JSON.stringify(db));updateProgress();}
+function updateProgress(){
+ let d=0,t=0;
+ Object.keys(plan).forEach(day=>{
+  plan[day].forEach((_,i)=>{t++; if(db[day+"_"+i]?.done)d++;});
+ });
+ document.getElementById("progress").innerHTML=`Completed ${d}/${t} exercises`;
+}
+function show(day){
+ content.innerHTML="";
+ let c=document.createElement("div");c.className="card";
+ c.innerHTML="<h2>"+day+"</h2>";
+ plan[day].forEach((e,i)=>{
+  let k=day+"_"+i;
+  if(!db[k])db[k]={};
+  let x=document.createElement("div");
+  x.className="ex";
+  x.innerHTML=`
+  <h3>${e[0]}</h3>
+  <div class=small>Target: ${e[2]}</div>
+  <div><b>${e[1]}</b></div>
+  <div class=small>Alternative: ${e[3]}</div>
+  <details>
+   <summary>Track Workout ${db[k].done?'<span class="done">✓</span>':''}</summary>
+   <div class=small>Previous: ${db[k].last||'No history'}</div>
+   Weight<input value="${db[k].weight||''}" onchange="u('${k}','weight',this.value)">
+   Reps<input value="${db[k].reps||''}" onchange="u('${k}','reps',this.value)">
+   Notes<textarea onchange="u('${k}','notes',this.value)">${db[k].notes||''}</textarea>
+   <label><input type=checkbox ${db[k].done?'checked':''} onchange="done('${k}',this.checked)"> Completed</label>
+  </details>`;
+  c.appendChild(x);
+ });
+ content.appendChild(c);
+}
+function u(k,f,v){db[k][f]=v;save();}
+function done(k,v){
+ db[k].done=v;
+ db[k].last=(db[k].weight||'?')+" kg × "+(db[k].reps||'?')+" ("+new Date().toLocaleDateString()+")";
+ save();
+}
+Object.keys(plan).forEach((d,idx)=>{
+ let b=document.createElement("button");
+ b.textContent=d;
+ b.onclick=()=>show(d);
+ tabs.appendChild(b);
+});
+show(Object.keys(plan)[0]);
+updateProgress();
+</script>
+</body>
+</html>
