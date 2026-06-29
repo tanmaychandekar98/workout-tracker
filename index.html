@@ -90,20 +90,24 @@ function show(day){
   <h3>${e[0]}</h3>
   <div class=small>Target: ${e[2]}</div>
   <div><b>${e[1]}</b></div>
-  <div class=small>Alternative: ${e[3]}</div>
+  <div class=small><b>Alternative:</b> ${e[3]}</div>
+
+  <div style="display:flex;gap:10px;margin:12px 0;">
+    <button onclick="done('${k}',true)" style="flex:1;padding:14px;font-size:18px;border:none;border-radius:10px;background:#2ecc71;color:white;">✓ COMPLETE</button>
+    <button onclick="skip('${k}')" style="flex:1;padding:14px;font-size:18px;border:none;border-radius:10px;background:#f39c12;color:white;">⏭ SKIP</button>
+  </div>
+
   <details>
-   <summary>Track Workout ${db[k].done?'<span class="done">✓</span>':''}</summary>
-   <div class=small>Previous: ${db[k].last||'No history'}</div>
-   Weight<input value="${db[k].weight||''}" onchange="u('${k}','weight',this.value)">
-   Reps<input value="${db[k].reps||''}" onchange="u('${k}','reps',this.value)">
-   Notes<textarea onchange="u('${k}','notes',this.value)">${db[k].notes||''}</textarea>
-   <label><input type=checkbox ${db[k].done?'checked':''} onchange="done('${k}',this.checked)"> Completed</label>
+    <summary>More Info</summary>
+    <p class="small">Target: ${e[2]}</p>
+    <p class="small">Alternative: ${e[3]}</p>
   </details>`;
   c.appendChild(x);
  });
  content.appendChild(c);
 }
 function u(k,f,v){db[k][f]=v;save();}
+function skip(k){db[k].skip=true;save();show(k.split('_')[0]);}
 function done(k,v){
  db[k].done=v;
  db[k].last=(db[k].weight||'?')+" kg × "+(db[k].reps||'?')+" ("+new Date().toLocaleDateString()+")";
